@@ -1,0 +1,40 @@
+@startuml
+actor Пользователь
+
+rectangle "Сервис сокращения ссылок" {
+    (Создать короткую ссылку) as CreateLink
+    (Редактировать короткую ссылку) as EditLink
+    (Удалить короткую ссылку) as DeleteLink
+    (Просмотреть список ссылок) as ViewLinks
+    (Получить уведомление) as ReceiveNotification
+    (Перейти по короткой ссылке) as RedirectLink
+    (Изменить лимит переходов) as ChangeRedirectLimit
+    (Создать несколько коротких ссылок) as CreateMultipleLinks
+    (Получить UUID) as GetUUID
+    (Верификация UUID) as VerifyUUID
+    (Открыть браузер) as OpenBrowser
+    (Отправить уведомление) as SendNotification
+}
+
+Пользователь --> CreateLink
+Пользователь --> EditLink
+Пользователь --> DeleteLink
+Пользователь --> ViewLinks
+Пользователь --> RedirectLink
+Пользователь --> CreateMultipleLinks
+
+(CreateLink) --> (GetUUID) : <<include>>
+(EditLink) --> (VerifyUUID) : <<include>>
+(DeleteLink) --> (VerifyUUID) : <<include>>
+(RedirectLink) --> (VerifyUUID) : <<include>>
+(ChangeRedirectLimit) --> (VerifyUUID) : <<include>>
+(CreateMultipleLinks) --> (GetUUID) : <<include>>
+
+(RedirectLink) --> (OpenBrowser) : <<extend>>
+
+(CreateLink) --> (SendNotification) : <<extend>> : После создания ссылки
+(EditLink) --> (SendNotification) : <<extend>> : После редактирования ссылки
+(DeleteLink) --> (SendNotification) : <<extend>> : После удаления ссылки
+(RedirectLink) --> (ReceiveNotification) : <<extend>> : При достижении лимита или истечении срока
+
+@enduml

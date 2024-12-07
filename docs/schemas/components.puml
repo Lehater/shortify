@@ -1,0 +1,151 @@
+@startuml
+!define RECTANGLE package
+
+' Define the layers as packages
+package "Entities" {
+    class User {
+        +User(uuid: String)
+        +getUuid(): String
+    }
+
+    class Link {
+        +Link(originalUrl: String, shortUrl: String, creationDate: DateTime, expirationDate: DateTime, redirectLimit: int, ownerUuid: String)
+        +incrementRedirectCount(): void
+        +isExpired(): boolean
+        +isRedirectLimitReached(): boolean
+        +getOriginalUrl(): String
+        +getShortUrl(): String
+        +getOwnerUuid(): String
+    }
+}
+
+package "Use Cases" {
+    class CreateShortLinkUseCase {
+        +execute(originalUrl: String, redirectLimit: int, ownerUuid: String): String
+    }
+
+    class EditLinkUseCase {
+        +execute(shortUrl: String, newRedirectLimit: int, ownerUuid: String): void
+    }
+
+    class DeleteLinkUseCase {
+        +execute(shortUrl: String, ownerUuid: String): void
+    }
+
+    class RedirectUseCase {
+        +execute(shortUrl: String): String
+    }
+
+    class ListUserLinksUseCase {
+        +execute(ownerUuid: String): List<Link>
+    }
+
+    class NotifyUserUseCase {
+        +execute(ownerUuid: String, message: String): void
+    }
+}
+
+package "Interface Adapters" {
+    interface LinkRepository {
+        +save(link: Link): void
+        +findByShortUrl(shortUrl: String): Link
+        +findAllByOwnerUuid(ownerUuid: String): List<Link>
+        +delete(link: Link): void
+        +update(link: Link): void
+    }
+
+    interface UserRepository {
+        +save(user: User): void
+        +findByUuid(uuid: String): User
+    }
+
+    class LinkController {
+        +createLink(originalUrl: String, redirectLimit: int): void
+        +editLink(shortUrl: String, newRedirectLimit: int): void
+        +deleteLink(shortUrl: String): void
+        +listLinks(): void
+        +redirect(shortUrl: String): void
+    }
+
+    class UserController {
+        +getOrCreateUser(): User
+    }
+
+    class ConsolePresenter {
+        +displayMessage(message: String): void
+        +displayLink(link: Link): void
+        +displayLinks(links: List<Link>): void
+        +displayError(errorMessage: String): void
+    }
+}
+
+package "Frameworks & Drivers" {
+    class ConsoleUI {
+        +start(): void
+        +processCommand(command: String): void
+    }
+
+    class InMemoryLinkRepository {
+        +save(link: Link): void
+        +findByShortUrl(shortUrl: String): Link
+        +findAllByOwnerUuid(ownerUuid: String): List<Link>
+        +delete(link: Link): void
+        +update(link: Link): void
+    }
+
+    class InMemoryUserRepository {
+        +save(user: User): void
+        +findByUuid(uuid: String): User
+    }
+
+    class NotificationService {
+        +notify(ownerUuid: String, message: String): void
+    }
+
+    class ConfigFileLoader {
+        +loadConfig(): Config
+    }
+
+    class UUIDGenerator {
+        +generateUUID(): String
+    }
+
+    class BrowserLauncher {
+        +openUrl(url: String): void
+    }
+}
+
+' Define dependencies
+LinkController --> CreateShortLinkUseCase
+LinkController --> EditLinkUseCase
+LinkController --> DeleteLinkUseCase
+LinkController --> ListUserLinksUseCase
+LinkController --> RedirectUseCase
+
+UserController --> NotifyUserUseCase
+
+CreateShortLinkUseCase --> LinkRepository
+CreateShortLinkUseCase --> UUIDGenerator
+
+EditLinkUseCase --> LinkRepository
+
+DeleteLinkUseCase --> LinkRepository
+
+RedirectUseCase --> LinkRepository
+RedirectUseCase --> BrowserLauncher
+RedirectUseCase --> NotifyUserUseCase
+
+ListUserLinksUseCase --> LinkRepository
+
+NotifyUserUseCase --> NotificationService
+
+LinkRepository <|.. InMemoryLinkRepository
+UserRepository <|.. InMemoryUserRepository
+
+LinkController --> ConsolePresenter
+UserController --> ConsolePresenter
+
+ConsoleUI --> LinkController
+ConsoleUI --> UserController
+
+@enduml

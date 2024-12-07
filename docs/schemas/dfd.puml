@@ -1,0 +1,35 @@
+@startuml
+!define DATASTORE rectangle
+!define PROCESS rectangle
+!define ACTOR actor
+
+actor Пользователь
+actor "Система уведомлений" as NotificationSystem
+
+DATASTORE "D1: База данных ссылок" as LinkDB
+DATASTORE "D2: База данных пользователей" as UserDB
+
+PROCESS "1.0 Прием запросов от пользователя" as P1
+PROCESS "2.0 Генерация и управление UUID" as P2
+PROCESS "3.0 Сокращение URL" as P3
+PROCESS "4.0 Управление ссылками" as P4
+PROCESS "5.0 Перенаправление по ссылке" as P5
+PROCESS "6.0 Отправка уведомлений" as P6
+
+Пользователь --> P1 : Запросы (create, edit, delete, redirect)
+P1 --> P2 : Проверка/генерация UUID
+P2 --> UserDB : Хранение/получение UUID
+P1 --> P3 : Длинный URL для сокращения
+P3 --> LinkDB : Сохранение короткого URL
+LinkDB --> P1 : Короткий URL
+P1 --> Пользователь : Ответ (короткий URL, статусы)
+P1 --> P4 : Запросы на редактирование/удаление
+P4 --> LinkDB : Изменение/удаление записей
+P4 --> Пользователь : Статусы операций
+Пользователь --> P5 : Ввод короткой ссылки для перехода
+P5 --> LinkDB : Получение исходного URL
+LinkDB --> P5 : Исходный URL
+P5 --> P6 : Уведомление при лимите/истечении
+P6 --> NotificationSystem : Отправка уведомлений
+NotificationSystem --> Пользователь : Уведомления в терминал
+@enduml
